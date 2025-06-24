@@ -281,7 +281,7 @@ namespace Project
                             }
                             else if (newBoard.CheckMoves())
                             {
-                                Console.WriteLine("\n🟨 It's a draw — the board is full!");
+                                Console.WriteLine("\nIt's a draw — the board is full!");
                                 GameStarted = false;
                             }
                             turn = 2;
@@ -305,7 +305,7 @@ namespace Project
                             }
                             else if (newBoard.CheckMoves())
                             {
-                                Console.WriteLine("\n🟨 It's a draw — the board is full!");
+                                Console.WriteLine("\nIt's a draw — the board is full!");
                                 GameStarted = false;
                             }
                             turn = 1;

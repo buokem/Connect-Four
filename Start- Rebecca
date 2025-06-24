@@ -69,13 +69,94 @@ namespace Project
     }
 
 
+    public class Board{
+        
+        //mohammed
+        public string[,] Grid = new string[6, 7]; // 6 rows, 7 columns
 
+        public Dictionary<int, int> ColumnHeights; //this keeps track of each filled position(row) in each column
 
+        private Dictionary<int, int> RowLengths; //this keeps track of each filled position(column) in each row
 
+        private List<int> LongRows; //track rows eligible for a winner
 
+        private List<int> LongCols; //track columns eligible for a winner
 
+        private int MovesPlayed = 0; 
 
+        //mohammed
+        public Board()
+        {
+            LongRows =  new List<int> { }; //init tracker for eligible winner cols
 
+            LongCols = new List<int> { }; //init tracker for eligible winner rows
+
+            ColumnHeights = new Dictionary<int, int>(); //init tracker for how many discs are in a col
+
+            RowLengths = new Dictionary<int, int>(); //init tracker for how many discs are in a row
+
+            for (int col = 0; col < 7; col++)
+            {
+                ColumnHeights[col] = 0; //set all values to 0(because all columns are empty when board is init)
+
+            }//creates an objectlike iterable that stores key(columns)-value(rows) pairs
+
+            for (int row = 0; row < 6; row++)
+            {
+                RowLengths[row] = 0; ////set all values to 0(because all rows are empty when board is init)
+
+            }//creates an objectlike iterable that stores key(rows)-value(columns) pairs
+
+            for (int row = 0; row < 6; row++)
+            {
+                for (int col = 0; col < 7; col++)
+                {
+                    Grid[row, col] = " ";
+                }
+            }
+        }
+
+        //mohammed
+        public bool CheckRowWinner()
+        {
+            foreach (int row in LongRows)
+            {
+                for (int col = 0; col <= 3; col++) //only need to check up to col 4
+                {
+                    string cell = Grid[row, col];
+                    if (cell != " " &&
+                        cell == Grid[row, col + 1] &&
+                        cell == Grid[row, col + 2] &&
+                        cell == Grid[row, col + 3]) //check the next 3 rows and see if they are equal
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        //mohammed
+        public bool CheckColumnWinner()
+        {
+            foreach (int col in LongCols)
+            {
+                for (int row = 5; row >= 3; row--) // start from bottom row
+                {
+                    string cell = Grid[row, col];
+                    if (cell != " " &&
+                        cell == Grid[row - 1, col] &&
+                        cell == Grid[row - 2, col] &&
+                        cell == Grid[row - 3, col]) //check the next 3 columns and see if they are equal
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+    
 
     //kachi
     public bool CheckDiagonalWinner()

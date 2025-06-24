@@ -51,5 +51,266 @@ namespace Project
 
             newBoard.placeDisc(col, Type);
         }
-
     }
+
+    //kachi
+    public class ComputerPlayer : Player
+    {
+        public ComputerPlayer(string name, string type) : base(name, type)
+        {
+
+        }
+
+        //AI MOVES
+        public override void placeDisc(Board board)
+        {
+            
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+    //kachi
+    public bool CheckDiagonalWinner()
+    {
+        foreach (int col in LongCols)
+        {
+            int colHeight = ColumnHeights[col];
+
+            // Start checking from row = 2 (highest row that still allows room for 3 more discs below diagonally)
+            for (int row = 2; row >= 6 - (colHeight + 1); row--)
+            {
+                // RIGHT CHECK: top-left to bottom-right "\"
+                if (col <= 3)
+                {
+                    if (Grid[row, col] != " " &&
+                        Grid[row, col] == Grid[row + 1, col + 1] &&
+                        Grid[row, col] == Grid[row + 2, col + 2] &&
+                        Grid[row, col] == Grid[row + 3, col + 3])
+                    {
+                        return true;
+                    }
+                }
+
+                // LEFT CHECK: top-right to bottom-left "/"
+                if (col >= 3)
+                {
+                    if (Grid[row, col] != " " &&
+                        Grid[row, col] == Grid[row + 1, col - 1] &&
+                        Grid[row, col] == Grid[row + 2, col - 2] &&
+                        Grid[row, col] == Grid[row + 3, col - 3])
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    //kachi
+    public class Game
+    {
+        public Player player1;
+        public Player player2;
+
+        public bool GameStarted = false;
+
+        public Game(int mode)
+        {
+            if (mode == 1)
+            {
+                player1 = CreateHumanPlayer(1);
+                player2 = CreateHumanPlayer(2);
+
+                while (player1.Type == player2.Type)
+                {
+                    Console.WriteLine("Both players chose the same disc. Player 2, choose a different one.");
+                    player2 = CreateHumanPlayer(2);
+                }
+            }
+            else if (mode == 2)
+            {
+                player1 = CreateHumanPlayer(1);
+                string disc = "";
+                string[] discAI = new string[2] { "X", "O" };
+                foreach(string i in discAI)
+                {
+                    if(player1.Type.ToLower() != i.ToLower())
+                    {
+                        disc = i;
+                        break;
+                    }
+                }
+                player2 = new ComputerPlayer("Can't Beat Me", disc);
+            }
+
+            GameStarted = true;
+        }
+
+        private Player CreateHumanPlayer(int playerNumber)
+        {
+            Console.WriteLine($"\nPlayer {playerNumber}, enter your name:");
+            string name = Console.ReadLine();
+
+            string type = "";
+            while (true)
+            {
+                Console.WriteLine($"\nPlayer {playerNumber}, enter a char for your disc (e.g., X or O):");
+                string input = Console.ReadLine();
+
+                if (!string.IsNullOrWhiteSpace(input))
+                {
+                    type = input[0].ToString().ToUpper(); //Get first character and convert to string(for users who type in more than character)
+                    break;
+                }
+
+                Console.WriteLine("Please enter at least one character.");
+            }
+
+            return new HumanPlayer(name, type);
+        }
+
+        public void Start()
+        {
+            int turn = 1;
+            if (GameStarted)
+            {
+                Board newBoard = new Board();
+                newBoard.Display();
+                while (GameStarted)
+                {
+                    if(turn == 1)
+                    {
+                        try
+                        {
+                            player1.placeDisc(newBoard);
+                            if (newBoard.CheckWinner())
+                            {
+                                Console.WriteLine($"\nPlayer {player1.Name} wins!");
+                                GameStarted = false;
+                            }
+                            else if (newBoard.CheckMoves())
+                            {
+                                Console.WriteLine("\n🟨 It's a draw — the board is full!");
+                                GameStarted = false;
+                            }
+                            turn = 2;
+                            
+                        }
+                        catch(Exception e)
+                        {
+                            Console.WriteLine($"Error {e.Message}");
+                        }
+                        
+                    }
+                    else
+                    {
+                        try
+                        {
+                            player2.placeDisc(newBoard);
+                            if (newBoard.CheckWinner())
+                            {
+                                Console.WriteLine($"\nPlayer {player2.Name} wins!");
+                                GameStarted = false;
+                            }
+                            else if (newBoard.CheckMoves())
+                            {
+                                Console.WriteLine("\n🟨 It's a draw — the board is full!");
+                                GameStarted = false;
+                            }
+                            turn = 1;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine($"Error {e.Message}");
+                        }
+                    }
+                    newBoard.Display();
+                }
+
+                AskToPlayAgain();
+            }
+           
+            
+        }
+
+        private void AskToPlayAgain()
+        {
+            Console.WriteLine("\nDo you want to play again?");
+            Console.WriteLine("1 - Yes");
+            Console.WriteLine("2 - No");
+
+            while (true)
+            {
+                try
+                {
+                    int choice = int.Parse(Console.ReadLine());
+
+                    if (choice == 1)
+                    {
+                        Console.Clear();
+                        new Game(Game.GetGameMode()).Start(); // Restart with fresh game
+                        break;
+                    }
+                    else if (choice == 2)
+                    {
+                        Console.WriteLine("Thanks for playing!");
+                        break;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Enter 1 or 2 only.");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Invalid input: {e.Message}");
+                }
+            }
+        }
+
+
+        //static function that runs gameMode(Single or Multi player)
+        public static int GetGameMode()
+        {
+            while (true)
+            {
+                Console.WriteLine("\nSelect 1 for Human vs Human");
+                Console.WriteLine("\nSelect 2 for Human vs Computer\n");
+
+                string input = Console.ReadLine();
+
+                if (int.TryParse(input, out int selected) && (selected == 1 || selected == 2))
+                {
+                    return selected; // break loop and return selected to function
+                }
+
+                Console.WriteLine("Invalid input. Please enter 1 or 2.");
+            }
+        }
+    }
+
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Welcome To Our Game");
+    
+            int mode = Game.GetGameMode();
+    
+            Game game = new Game(mode);
+    
+            game.Start();
+            
+        }
+    }
+}

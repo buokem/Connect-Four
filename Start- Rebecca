@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-
+using System.Threading; //for AI delay
 
 namespace Project
 {
@@ -44,7 +44,7 @@ namespace Project
                 throw new Exception("Column must be between 0 and 6");
             }
 
-            if (newBoard.ColumnHeights[col] >= 6)
+            if (newBoard.GetColumnHeights(col) >= 6)
             {
                 throw new Exception("That column is full");
             }
@@ -56,16 +56,126 @@ namespace Project
     //kachi
     public class ComputerPlayer : Player
     {
+        List<int> winCols = new();
+        List<int> blockCols = new();
+        string aiDisc = "";
+        Random rand = new Random();
         public ComputerPlayer(string name, string type) : base(name, type)
         {
-
+            Console.WriteLine("trY BEatInG me, I dARe YoU");
+            aiDisc = type;
         }
-
+    
+        //checks board columns for threats
+        private void ColumnChecker(Board board)
+        {
+            for (int col = 0; col < 7; col++)
+            {
+                if (board.GetColumnHeight(col) >= 2 && board.GetColumnHeight(col) <= 5)
+                {
+                    int r1 = 6 - board.GetColumnHeight(col);
+                    int r2 = r1 + 1;
+    
+                    string d1 = board.Grid[r1, col];
+                    string d2 = board.Grid[r2, col];
+    
+                    if (d1 == d2 && d1 != " ")
+                    {
+                        if (d1 == aiDisc)
+                            winCols.Add(col);
+                        else
+                            blockCols.Add(col);
+                    }
+                }
+            }
+        }
+    
+        //checks board rows for threats
+        private void RowChecker(Board board)
+        {
+            for (int row = 5; row > -1; row--) //check all rows starting from the bottom
+            {
+                for (int col = 0; col <= 3; col++) // ccheck only rows 0 - 3 because anything more can't hold 4 discs
+                {
+                    int aiCount = 0; //used to track how many ai discs are in a row
+                    int playerCount = 0; //used to track how many player1 discs are in a row
+                    int emptyCol = -1; //used to keep track of a row with one empty column
+    
+                    for (int offset = 0; offset < 4; offset++) //runs inner loop that checks next columns on same row
+                    {
+                        string cell = board.Grid[row, col + offset];
+                        if (cell == aiDisc)  
+                        {
+                            aiCount++; //once we find any aidisc in any cell we increase this
+                        }
+                        else if (cell != aiDisc && cell != " ") {
+                            playerCount++; //once we find any player1 in any cell we increase this
+                        }
+                        else
+                        {
+                            //if cell is empty, save cell col to emptyCol
+                            if (emptyCol == -1)
+                                emptyCol = col + offset;
+                            else
+                            {
+                                emptyCol = -1; // more than 1 empty = not useful
+                                break;
+                            }
+                        }
+                    }
+    
+                    // if we found an empty column and the height of that emptycol is just below the row we are checking
+                    if (emptyCol != -1 && row == 5 - board.GetColumnHeight(emptyCol))
+                    {
+                        //check if ai count is 3
+                        if (aiCount == 3 && playerCount == 0)
+                        {
+                            //add col to our wincol
+                            winCols.Add(emptyCol);
+                        }
+                        else if (playerCount == 3 && aiCount == 0)//check if player count is 3
+                        {
+                            //add to our blockcol
+                            blockCols.Add(emptyCol);
+                        }
+                    }
+                }
+            }
+        }
+    
         //AI MOVES
         public override void placeDisc(Board board)
         {
-            
+            Thread.Sleep(800); //adds delay before AI plays
+    
+            winCols.Clear();
+            blockCols.Clear();
+    
+            ColumnChecker(board);
+            RowChecker(board);
+    
+            int selectedCol = -1;
+    
+            if (winCols.Count > 0)
+            {
+                selectedCol = winCols[rand.Next(winCols.Count)]; //if we have more than 2 winCols then we select anyone from the array
+            }
+            else if (blockCols.Count > 0)
+            {
+                selectedCol = blockCols[rand.Next(blockCols.Count)]; //if we have more than 2 blockCols then we select anyone from the array
+            }
+            else
+            {
+                do
+                {
+                    selectedCol = rand.Next(0, 7);
+                }
+                while (board.GetColumnHeight(selectedCol) >= 6); //put in random col
+            }
+    
+            board.placeDisc(selectedCol, Type);
         }
+    
     }
 
 
@@ -74,7 +184,7 @@ namespace Project
         //mohammed
         public string[,] Grid = new string[6, 7]; // 6 rows, 7 columns
 
-        public Dictionary<int, int> ColumnHeights; //this keeps track of each filled position(row) in each column
+        private Dictionary<int, int> ColumnHeights; //this keeps track of each filled position(row) in each column
 
         private Dictionary<int, int> RowLengths; //this keeps track of each filled position(column) in each row
 
@@ -158,43 +268,55 @@ namespace Project
         }
     
 
-    //kachi
-    public bool CheckDiagonalWinner()
-    {
-        foreach (int col in LongCols)
+        //kachi
+        public bool CheckDiagonalWinner()
         {
-            int colHeight = ColumnHeights[col];
-
-            // Start checking from row = 2 (highest row that still allows room for 3 more discs below diagonally)
-            for (int row = 2; row >= 6 - (colHeight + 1); row--)
+            foreach (int col in LongCols)
             {
-                // RIGHT CHECK: top-left to bottom-right "\"
-                if (col <= 3)
+                int colHeight = ColumnHeights[col];
+    
+                // Start checking from row = 2 (highest row that still allows room for 3 more discs below diagonally)
+                for (int row = 2; row >= 6 - (colHeight + 1); row--)
                 {
-                    if (Grid[row, col] != " " &&
-                        Grid[row, col] == Grid[row + 1, col + 1] &&
-                        Grid[row, col] == Grid[row + 2, col + 2] &&
-                        Grid[row, col] == Grid[row + 3, col + 3])
+                    // RIGHT CHECK: top-left to bottom-right "\"
+                    if (col <= 3)
                     {
-                        return true;
+                        if (Grid[row, col] != " " &&
+                            Grid[row, col] == Grid[row + 1, col + 1] &&
+                            Grid[row, col] == Grid[row + 2, col + 2] &&
+                            Grid[row, col] == Grid[row + 3, col + 3])
+                        {
+                            return true;
+                        }
                     }
-                }
-
-                // LEFT CHECK: top-right to bottom-left "/"
-                if (col >= 3)
-                {
-                    if (Grid[row, col] != " " &&
-                        Grid[row, col] == Grid[row + 1, col - 1] &&
-                        Grid[row, col] == Grid[row + 2, col - 2] &&
-                        Grid[row, col] == Grid[row + 3, col - 3])
+    
+                    // LEFT CHECK: top-right to bottom-left "/"
+                    if (col >= 3)
                     {
-                        return true;
+                        if (Grid[row, col] != " " &&
+                            Grid[row, col] == Grid[row + 1, col - 1] &&
+                            Grid[row, col] == Grid[row + 2, col - 2] &&
+                            Grid[row, col] == Grid[row + 3, col - 3])
+                        {
+                            return true;
+                        }
                     }
                 }
             }
+    
+            return false;
         }
 
-        return false;
+        //get methods so our columnHeight and RowLength can be private
+        public int GetColumnHeight(int col)
+        {
+            return ColumnHeights.ContainsKey(col) ? ColumnHeights[col] : 0;
+        }
+
+        public int GetRowLength(int row)
+        {
+            return RowLengths.ContainsKey(row) ? RowLengths[row] : 0;
+        }
     }
 
     //kachi

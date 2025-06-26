@@ -363,6 +363,18 @@ namespace Project
             return false;
         }
 
+        //mohammed
+        public bool CheckWinner()
+        {
+            if (CheckRowWinner() ||
+                CheckColumnWinner() ||
+                CheckDiagonalWinner())
+            {
+                return true;
+            }
+            return false;
+        }
+    
         //get methods so our columnHeight and RowLength can be private
         public int GetColumnHeight(int col)
         {

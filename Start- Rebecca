@@ -178,6 +178,62 @@ namespace Project
     
     }
 
+     //rebecca
+    public void Display() //displays board
+    {
+            
+        Console.WriteLine(" 0   1   2   3   4   5   6 ");
+        Console.WriteLine("-----------------------------");
+        for (int row = 0; row < 6; row++)
+        {
+            for (int col = 0; col < 7; col++)
+            {
+                Console.Write($"| {Grid[row, col]} ");
+            }
+            Console.WriteLine("|");
+            Console.WriteLine("-----------------------------");
+        }
+    }
+
+    //rebecca
+    public bool CheckMoves()
+    {
+        if(MovesPlayed == 42)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    //rebecca
+    public void placeDisc(int col, string disc)
+    {
+        if (ColumnHeights[col] < 6) //if a column has less than 6 you can add to the column
+        {
+            int rowPlaced = 5 - ColumnHeights[col];
+            Grid[rowPlaced, col] = disc;
+            ColumnHeights[col] = ColumnHeights[col] + 1;
+            RowLengths[rowPlaced] = RowLengths[rowPlaced] + 1;
+
+            if (!LongRows.Contains(rowPlaced) && RowLengths[rowPlaced] > 3) //add row to eligible list
+            {
+                LongRows.Add(rowPlaced);
+            }
+
+            if (!LongCols.Contains(col) && ColumnHeights[col] > 3) //add col to eligible list
+            {
+                LongCols.Add(col);
+            }
+
+            MovesPlayed++;
+        }
+
+        else
+        {
+            Console.WriteLine($"Please select another column");
+        }
+    }
+
 
     public class Board{
         
